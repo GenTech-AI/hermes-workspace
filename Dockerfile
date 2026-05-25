@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1.6
 # Hermes Workspace — production Docker image
-# Publishes to ghcr.io/outsourc-e/hermes-workspace
+# GenTech-AI fork: ghcr.io/gentech-ai/hermes-workspace
 #
 # Build locally:
 #   docker build -t hermes-workspace .
 # Run:
 #   docker run -p 3000:3000 -e HERMES_API_URL=http://host.docker.internal:8642 hermes-workspace
-# Or pull pre-built:
-#   docker pull ghcr.io/outsourc-e/hermes-workspace:latest
+# Or pull pre-built (GenTech-AI registry):
+#   docker pull ghcr.io/gentech-ai/hermes-workspace:latest
 #
 FROM tianon/gosu:1.17-bookworm AS gosu_source
 # ─── build stage ─────────────────────────────────────────────────────────

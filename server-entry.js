@@ -30,7 +30,15 @@ if (isNonLoopbackHost(host)) {
     process.env.CLAUDE_PASSWORD ||
     ''
   ).trim()
-  if (!password) {
+
+  // ServeAI-managed deployments: SERVEAI_INSTANCE_ID is set and the workspace
+  // is embedded inside a K8s pod whose network perimeter is the API gateway.
+  // The gateway enforces JWT auth; the workspace enforces per-request ServeAI
+  // cookie auth (accessToken + serveai_ctx).  A standalone HERMES_PASSWORD is
+  // not used — requiring one would prevent the pod from starting.
+  const isServeAIManaged = (process.env.SERVEAI_INSTANCE_ID || '').trim().length > 0
+
+  if (!password && !isServeAIManaged) {
     console.error(
       '\n[workspace] refusing to start.\n' +
         `  HOST is set to "${host}" (non-loopback), but HERMES_PASSWORD is unset.\n` +
@@ -38,6 +46,7 @@ if (isNonLoopbackHost(host)) {
         '  to anyone who can reach the port. Either:\n' +
         '    • set HOST=127.0.0.1 for local-only access, or\n' +
         '    • set HERMES_PASSWORD=<strong-secret> to enable workspace auth, or\n' +
+        '    • set SERVEAI_INSTANCE_ID=<id> to run in ServeAI-managed mode (gateway handles auth), or\n' +
         '    • set HERMES_ALLOW_INSECURE_REMOTE=1 to bypass this check (not recommended).\n' +
         '  See #122 for context.\n',
     )
@@ -57,6 +66,12 @@ if (isNonLoopbackHost(host)) {
     }
     console.warn(
       '[workspace] HERMES_ALLOW_INSECURE_REMOTE is set — starting anyway.',
+    )
+  }
+
+  if (isServeAIManaged) {
+    console.log(
+      `[workspace] ServeAI-managed mode: running on ${host}:${port} with gateway cookie auth.`,
     )
   }
 

@@ -295,6 +295,14 @@ export function isServeAIAuthenticated(request: Request): boolean {
 }
 
 export function requireLocalOrAuth(request: Request): boolean {
+  // In ServeAI-managed mode every request (including those from within the
+  // K8s cluster) must carry a valid serveai_ctx + accessToken cookie pair.
+  // Falling back to IP-based local detection would silently allow any pod
+  // in the cluster to reach terminals/files without going through the gateway.
+  if (isServeAIMode()) {
+    return isServeAIAuthenticated(request)
+  }
+
   if (!isPasswordProtectionEnabled()) {
     return isLocalRequest(request)
   }
