@@ -27,6 +27,7 @@ import {
 } from '@/components/onboarding/claude-onboarding'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { LoginScreen } from '@/components/auth/login-screen'
+import { ServeAIUnauthorizedScreen } from '@/components/auth/serveai-unauthorized-screen'
 import { fetchClaudeAuthStatus, type AuthStatus } from '@/lib/claude-auth'
 import { getRootSurfaceState } from './-root-layout-state'
 
@@ -335,7 +336,36 @@ function RootLayout() {
   useEffect(() => {
     if (typeof window === 'undefined') return undefined
     let cancelled = false
-    fetchClaudeAuthStatus()
+
+    const initAndCheck = async (): Promise<AuthStatus> => {
+      // If the URL carries ServeAI context params (first open from ServeAI dashboard),
+      // send them to the server so it can set the serveai_ctx cookie and validate
+      // instance access — mirrors hermes-webui's initial page-request handler.
+      const url = new URL(window.location.href)
+      const instanceId = url.searchParams.get('serveai_instance_id')
+      if (instanceId) {
+        const orgId = url.searchParams.get('serveai_org_id') ?? ''
+        const userId = url.searchParams.get('serveai_user_id') ?? ''
+        try {
+          await fetch('/api/serveai/context-init', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ instanceId, orgId, userId }),
+          })
+        } catch {
+          // Ignore — /api/auth-check will report unauthenticated if needed
+        }
+        // Clean URL params from the address bar (no reload)
+        url.searchParams.delete('serveai_instance_id')
+        url.searchParams.delete('serveai_org_id')
+        url.searchParams.delete('serveai_user_id')
+        window.history.replaceState({}, '', url.toString())
+      }
+
+      return fetchClaudeAuthStatus()
+    }
+
+    initAndCheck()
       .then((status) => {
         if (!cancelled) setAuthStatus(status)
       })
@@ -354,7 +384,13 @@ function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <Toaster />
-      {mounted && rootSurfaceState.showLogin ? <LoginScreen /> : null}
+      {mounted && rootSurfaceState.showLogin ? (
+        authStatus?.serveAIMode ? (
+          <ServeAIUnauthorizedScreen serveAILoginUrl={authStatus.serveAILoginUrl} />
+        ) : (
+          <LoginScreen />
+        )
+      ) : null}
       {mounted && rootSurfaceState.showOnboarding ? <ClaudeOnboarding /> : null}
       {rootSurfaceState.showWorkspaceShell ? (
         <>

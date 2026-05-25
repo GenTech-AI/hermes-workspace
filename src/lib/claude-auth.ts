@@ -2,6 +2,10 @@ export interface AuthStatus {
   authenticated: boolean
   authRequired: boolean
   error?: string
+  /** True when running inside a ServeAI-managed pod. */
+  serveAIMode?: boolean
+  /** URL to redirect the user to for ServeAI login (only set when serveAIMode is true). */
+  serveAILoginUrl?: string
 }
 
 export async function fetchClaudeAuthStatus(
