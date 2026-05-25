@@ -17,7 +17,11 @@ WORKDIR /app
 
 # Install deps (cache-friendly: copy only manifests first)
 COPY package.json pnpm-lock.yaml* ./
-RUN pnpm install --frozen-lockfile
+# --ignore-scripts skips ALL lifecycle scripts (avoids ERR_PNPM_IGNORED_BUILDS from
+# electron/electron-winstaller which are unneeded in server mode). We then explicitly
+# rebuild only the two packages that need native binaries for the Vite build step.
+RUN pnpm install --frozen-lockfile --ignore-scripts && \
+    pnpm rebuild esbuild unrs-resolver
 
 # Copy sources and build
 COPY . .
