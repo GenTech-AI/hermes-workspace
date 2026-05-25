@@ -1,17 +1,18 @@
 name: Build & publish Docker image
 
-# Publishes Hermes Workspace to GitHub Container Registry (GHCR) so users
-# can deploy via Coolify / Easypanel / Dokploy / any Docker host with:
+# Publishes Hermes Workspace to GitHub Container Registry (GHCR) under the
+# GenTech-AI organization:
 #
-#   image: ghcr.io/outsourc-e/hermes-workspace:latest
+#   image: ghcr.io/gentech-ai/hermes-workspace:latest
 #
 # Triggers:
-#   - push to main        -> tags: latest, main, main-<sha>
-#   - push a git tag v*   -> tags: <version>, <major>.<minor>, latest
-#   - manual dispatch     -> tags: latest
+#   - push to main                      -> tags: latest, main, main-<sha>
+#   - push to feat/serveai-*            -> tags: <branch-name>
+#   - push a git tag v*                 -> tags: <version>, <major>.<minor>, latest
+#   - manual dispatch                   -> tags: latest
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/serveai-*']
     tags: ['v*']
   workflow_dispatch:
 

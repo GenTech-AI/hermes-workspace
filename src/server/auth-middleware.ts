@@ -8,6 +8,11 @@ import {
 } from 'node:fs'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
+import {
+  isServeAIMode,
+  getServeAICtxFromRequest,
+  getAccessTokenFromRequest,
+} from './serveai-context'
 
 /**
  * Persistent session token store.
@@ -248,10 +253,16 @@ function isLocalRequest(request: Request): boolean {
 /**
  * Check if the request is authenticated.
  * Returns true if:
+ * - In ServeAI mode AND the request carries a valid serveai_ctx + accessToken, OR
  * - Password protection is disabled, OR
  * - Request has a valid session token
  */
 export function isAuthenticated(request: Request): boolean {
+  // ServeAI-managed mode: bypass workspace password, use ServeAI cookie auth
+  if (isServeAIMode()) {
+    return isServeAIAuthenticated(request)
+  }
+
   // No password configured? No auth needed
   if (!isPasswordProtectionEnabled()) {
     return true
@@ -268,7 +279,30 @@ export function isAuthenticated(request: Request): boolean {
   return isValidSessionToken(token)
 }
 
+/**
+ * Fast synchronous ServeAI auth check (used as the gate for every request).
+ *
+ * Only checks cookie presence — the deep gateway verification is done once
+ * per page-load inside the /api/auth-check endpoint (async, fail-open).
+ * This mirrors hermes-webui's approach where the Python server checks for
+ * accessToken presence before even calling the gateway.
+ */
+export function isServeAIAuthenticated(request: Request): boolean {
+  const ctx = getServeAICtxFromRequest(request)
+  if (!ctx.instanceId) return false
+  const token = getAccessTokenFromRequest(request)
+  return token !== null
+}
+
 export function requireLocalOrAuth(request: Request): boolean {
+  // In ServeAI-managed mode every request (including those from within the
+  // K8s cluster) must carry a valid serveai_ctx + accessToken cookie pair.
+  // Falling back to IP-based local detection would silently allow any pod
+  // in the cluster to reach terminals/files without going through the gateway.
+  if (isServeAIMode()) {
+    return isServeAIAuthenticated(request)
+  }
+
   if (!isPasswordProtectionEnabled()) {
     return isLocalRequest(request)
   }
