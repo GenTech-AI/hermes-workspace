@@ -191,6 +191,32 @@ function parseClaudeToolProgressChunk(payload: string): StreamChunkType | null {
   }
 }
 
+function findSseBoundary(input: string): { index: number; length: number } {
+  const crlf = input.indexOf('\r\n\r\n')
+  const lf = input.indexOf('\n\n')
+  if (crlf === -1 && lf === -1) return { index: -1, length: 0 }
+  if (crlf === -1) return { index: lf, length: 2 }
+  if (lf === -1) return { index: crlf, length: 4 }
+  return lf < crlf ? { index: lf, length: 2 } : { index: crlf, length: 4 }
+}
+
+function extractText(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (Array.isArray(value)) {
+    return value
+      .map((part) => {
+        if (typeof part === 'string') return part
+        const record = readRecord(part)
+        if (!record) return ''
+        return readString(record.text) || readString(record.delta)
+      })
+      .join('')
+  }
+  const record = readRecord(value)
+  if (!record) return ''
+  return readString(record.text) || readString(record.delta)
+}
+
 export async function* parseOpenAIStream(
   response: Response,
 ): AsyncGenerator<StreamChunkType, void, void> {
@@ -208,60 +234,73 @@ export async function* parseOpenAIStream(
 
     buffer += decoder.decode(value, { stream: true })
 
-    let boundary = buffer.indexOf('\n\n')
-    while (boundary >= 0) {
-      const rawEvent = buffer.slice(0, boundary)
-      buffer = buffer.slice(boundary + 2)
+    let boundary = findSseBoundary(buffer)
+    while (boundary.index >= 0) {
+      const rawEvent = buffer.slice(0, boundary.index)
+      buffer = buffer.slice(boundary.index + boundary.length)
 
       let eventName = ''
       const dataLines: string[] = []
 
-      for (const line of rawEvent.split('\n')) {
-        const trimmed = line.trim()
-        if (trimmed.startsWith('event:')) {
-          eventName = trimmed.slice(6).trim()
+      for (const line of rawEvent.split(/\r?\n/)) {
+        if (line.startsWith('event:')) {
+          eventName = line.slice(6).trim()
           continue
         }
-        if (trimmed.startsWith('data:')) {
-          dataLines.push(trimmed.slice(5).trim())
+        if (line.startsWith('data:')) {
+          dataLines.push(line.slice(5).trimStart())
         }
       }
 
-      for (const payload of dataLines) {
-        if (!payload || payload === '[DONE]') continue
+      const payload = dataLines.join('\n').trim()
+      if (!payload || payload === '[DONE]') {
+        boundary = findSseBoundary(buffer)
+        continue
+      }
 
-        if (
-          eventName === 'claude.tool.progress' ||
-          eventName === 'hermes.tool.progress'
-        ) {
-          const toolChunk = parseClaudeToolProgressChunk(payload)
-          if (toolChunk) yield toolChunk
-          continue
-        }
+      if (
+        eventName === 'claude.tool.progress' ||
+        eventName === 'hermes.tool.progress'
+      ) {
+        const toolChunk = parseClaudeToolProgressChunk(payload)
+        if (toolChunk) yield toolChunk
+        boundary = findSseBoundary(buffer)
+        continue
+      }
 
-        try {
-          const parsed = JSON.parse(payload) as {
-            choices?: Array<{
-              delta?: {
-                content?: string | null
-                reasoning?: string | null
-                reasoning_content?: string | null
-              }
-            }>
+      try {
+        const parsed = JSON.parse(payload) as Record<string, unknown>
+
+        // OpenAI Responses event stream compatibility
+        const eventType = readString(parsed.type)
+        if (eventType === 'response.output_text.delta') {
+          const delta = extractText(parsed.delta)
+          if (delta) {
+            yield { type: 'content' as const, text: delta }
+            boundary = findSseBoundary(buffer)
+            continue
           }
-          const d = parsed.choices?.[0]?.delta
-          const content = d?.content || ''
-          const reasoning = d?.reasoning || d?.reasoning_content || ''
-          // Yield content when available; fall back to reasoning only if no content yet
-          if (content) yield { type: 'content' as const, text: content }
-          else if (reasoning)
-            yield { type: 'reasoning' as const, text: reasoning }
-        } catch {
-          // Ignore malformed chunks.
         }
+
+        const choice = readRecord(Array.isArray(parsed.choices) ? parsed.choices[0] : null)
+        const delta = readRecord(choice?.delta)
+        const content =
+          extractText(delta?.content) ||
+          extractText(choice?.message && readRecord(choice.message)?.content) ||
+          extractText(choice?.text)
+        const reasoning =
+          extractText(delta?.reasoning) ||
+          extractText(delta?.reasoning_content)
+
+        // Yield content when available; fall back to reasoning only if no content yet
+        if (content) yield { type: 'content' as const, text: content }
+        else if (reasoning)
+          yield { type: 'reasoning' as const, text: reasoning }
+      } catch {
+        // Ignore malformed chunks.
       }
 
-      boundary = buffer.indexOf('\n\n')
+      boundary = findSseBoundary(buffer)
     }
   }
 }

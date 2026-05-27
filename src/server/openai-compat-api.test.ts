@@ -143,4 +143,36 @@ describe('parseOpenAIStream', () => {
       { type: 'content', text: 'done' },
     ])
   })
+
+  it('parses CRLF-delimited SSE frames', async () => {
+    const response = createStreamResponse([
+      'data: {"choices":[{"delta":{"content":"Hello"}}]}\r\n\r\n',
+      'data: {"choices":[{"delta":{"content":" world"}}]}\r\n\r\n',
+      'data: [DONE]\r\n\r\n',
+    ])
+
+    const chunks = []
+    for await (const chunk of parseOpenAIStream(response)) {
+      chunks.push(chunk)
+    }
+
+    expect(chunks).toEqual([
+      { type: 'content', text: 'Hello' },
+      { type: 'content', text: ' world' },
+    ])
+  })
+
+  it('falls back to streamed choice.message.content when delta is empty', async () => {
+    const response = createStreamResponse([
+      'data: {"choices":[{"delta":{},"message":{"content":"fallback text"}}]}\n\n',
+      'data: [DONE]\n\n',
+    ])
+
+    const chunks = []
+    for await (const chunk of parseOpenAIStream(response)) {
+      chunks.push(chunk)
+    }
+
+    expect(chunks).toEqual([{ type: 'content', text: 'fallback text' }])
+  })
 })

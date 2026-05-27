@@ -119,6 +119,7 @@ import { Route as ApiSkillsToggleRouteImport } from './routes/api/skills/toggle'
 import { Route as ApiSkillsInstallRouteImport } from './routes/api/skills/install'
 import { Route as ApiSkillsHubSearchRouteImport } from './routes/api/skills/hub-search'
 import { Route as ApiSessionsSendRouteImport } from './routes/api/sessions/send'
+import { Route as ApiServeaiContextInitRouteImport } from './routes/api/serveai/context-init'
 import { Route as ApiProfilesUpdateRouteImport } from './routes/api/profiles/update'
 import { Route as ApiProfilesRenameRouteImport } from './routes/api/profiles/rename'
 import { Route as ApiProfilesReadRouteImport } from './routes/api/profiles/read'
@@ -710,6 +711,11 @@ const ApiSessionsSendRoute = ApiSessionsSendRouteImport.update({
   path: '/send',
   getParentRoute: () => ApiSessionsRoute,
 } as any)
+const ApiServeaiContextInitRoute = ApiServeaiContextInitRouteImport.update({
+  id: '/api/serveai/context-init',
+  path: '/api/serveai/context-init',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProfilesUpdateRoute = ApiProfilesUpdateRouteImport.update({
   id: '/api/profiles/update',
   path: '/api/profiles/update',
@@ -1045,6 +1051,7 @@ export interface FileRoutesByFullPath {
   '/api/profiles/read': typeof ApiProfilesReadRoute
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
+  '/api/serveai/context-init': typeof ApiServeaiContextInitRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1195,6 +1202,7 @@ export interface FileRoutesByTo {
   '/api/profiles/read': typeof ApiProfilesReadRoute
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
+  '/api/serveai/context-init': typeof ApiServeaiContextInitRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1347,6 +1355,7 @@ export interface FileRoutesById {
   '/api/profiles/read': typeof ApiProfilesReadRoute
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
+  '/api/serveai/context-init': typeof ApiServeaiContextInitRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1500,6 +1509,7 @@ export interface FileRouteTypes {
     | '/api/profiles/read'
     | '/api/profiles/rename'
     | '/api/profiles/update'
+    | '/api/serveai/context-init'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1650,6 +1660,7 @@ export interface FileRouteTypes {
     | '/api/profiles/read'
     | '/api/profiles/rename'
     | '/api/profiles/update'
+    | '/api/serveai/context-init'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1801,6 +1812,7 @@ export interface FileRouteTypes {
     | '/api/profiles/read'
     | '/api/profiles/rename'
     | '/api/profiles/update'
+    | '/api/serveai/context-init'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1935,6 +1947,7 @@ export interface RootRouteChildren {
   ApiProfilesReadRoute: typeof ApiProfilesReadRoute
   ApiProfilesRenameRoute: typeof ApiProfilesRenameRoute
   ApiProfilesUpdateRoute: typeof ApiProfilesUpdateRoute
+  ApiServeaiContextInitRoute: typeof ApiServeaiContextInitRoute
   ApiUpdateAgentRoute: typeof ApiUpdateAgentRoute
   ApiUpdateStatusRoute: typeof ApiUpdateStatusRoute
   ApiUpdateWorkspaceRoute: typeof ApiUpdateWorkspaceRoute
@@ -2712,6 +2725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSessionsSendRouteImport
       parentRoute: typeof ApiSessionsRoute
     }
+    '/api/serveai/context-init': {
+      id: '/api/serveai/context-init'
+      path: '/api/serveai/context-init'
+      fullPath: '/api/serveai/context-init'
+      preLoaderRoute: typeof ApiServeaiContextInitRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/profiles/update': {
       id: '/api/profiles/update'
       path: '/api/profiles/update'
@@ -3315,6 +3335,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProfilesReadRoute: ApiProfilesReadRoute,
   ApiProfilesRenameRoute: ApiProfilesRenameRoute,
   ApiProfilesUpdateRoute: ApiProfilesUpdateRoute,
+  ApiServeaiContextInitRoute: ApiServeaiContextInitRoute,
   ApiUpdateAgentRoute: ApiUpdateAgentRoute,
   ApiUpdateStatusRoute: ApiUpdateStatusRoute,
   ApiUpdateWorkspaceRoute: ApiUpdateWorkspaceRoute,

@@ -947,7 +947,7 @@ export function useStreamingMessage(options: UseStreamingMessageOptions = {}) {
           }
 
           buffer += decoder.decode(value, { stream: true })
-          const events = buffer.split('\n\n')
+          const events = buffer.split(/\r?\n\r?\n/)
           buffer = events.pop() ?? ''
 
           for (const eventBlock of events) {
