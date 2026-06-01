@@ -130,15 +130,24 @@ export async function listSessions(
   offset = 0,
 ): Promise<Array<ClaudeSession>> {
   if (getCapabilities().dashboard.available) {
-    const resp = await listDashboardSessions(limit, offset)
-    return resp.sessions as Array<ClaudeSession>
+    try {
+      const resp = await listDashboardSessions(limit, offset)
+      // Dashboard (port 9119) returns { sessions: [...], total: ... }
+      return ((resp as any)?.sessions as Array<ClaudeSession>) ?? []
+    } catch {
+      return []
+    }
   }
-  // Gateway (port 8642) returns { object: "list", data: [...] }
-  // Legacy shape was { items: [...] } — support both.
-  const resp = await claudeGet<{ data?: Array<ClaudeSession>; items?: Array<ClaudeSession> }>(
-    `/api/sessions?limit=${limit}&offset=${offset}`,
-  )
-  return (resp.data ?? resp.items) ?? []
+  try {
+    // Gateway (port 8642) returns { object: "list", data: [...] }
+    // Legacy shape was { items: [...] } — support both.
+    const resp = await claudeGet<{ data?: Array<ClaudeSession>; items?: Array<ClaudeSession> }>(
+      `/api/sessions?limit=${limit}&offset=${offset}`,
+    )
+    return ((resp as any)?.data ?? (resp as any)?.items) ?? []
+  } catch {
+    return []
+  }
 }
 
 export async function getSession(sessionId: string): Promise<ClaudeSession> {
@@ -195,12 +204,15 @@ export async function getMessages(
 ): Promise<Array<ClaudeMessage>> {
   if (getCapabilities().dashboard.available) {
     const resp = await getDashboardSessionMessages(sessionId)
-    return resp.messages as Array<ClaudeMessage>
+    // Dashboard (port 9119) returns { messages: [...] }
+    return (resp.messages as Array<ClaudeMessage>) ?? []
   }
-  const resp = await claudeGet<{ items: Array<ClaudeMessage>; total: number }>(
+  // Gateway (port 8642) returns { object: "list", data: [...] }
+  // Legacy shape was { items: [...] } — support both.
+  const resp = await claudeGet<{ data?: Array<ClaudeMessage>; items?: Array<ClaudeMessage> }>(
     `/api/sessions/${sessionId}/messages`,
   )
-  return resp.items
+  return (resp.data ?? resp.items) ?? []
 }
 
 export async function searchSessions(
