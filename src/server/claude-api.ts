@@ -133,10 +133,12 @@ export async function listSessions(
     const resp = await listDashboardSessions(limit, offset)
     return resp.sessions as Array<ClaudeSession>
   }
-  const resp = await claudeGet<{ items: Array<ClaudeSession>; total: number }>(
+  // Gateway (port 8642) returns { object: "list", data: [...] }
+  // Legacy shape was { items: [...] } — support both.
+  const resp = await claudeGet<{ data?: Array<ClaudeSession>; items?: Array<ClaudeSession> }>(
     `/api/sessions?limit=${limit}&offset=${offset}`,
   )
-  return resp.items
+  return (resp.data ?? resp.items) ?? []
 }
 
 export async function getSession(sessionId: string): Promise<ClaudeSession> {
