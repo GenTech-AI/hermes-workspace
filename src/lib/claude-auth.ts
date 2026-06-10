@@ -6,6 +6,12 @@ export interface AuthStatus {
   serveAIMode?: boolean
   /** URL to redirect the user to for ServeAI login (only set when serveAIMode is true). */
   serveAILoginUrl?: string
+  /**
+   * Why the user is not authorized (only set when authenticated is false in ServeAI mode).
+   * - 'not_logged_in': no access token or no instance context (user needs to log in)
+   * - 'access_denied': token is valid but user has no access to this specific instance
+   */
+  unauthorizedReason?: 'not_logged_in' | 'access_denied'
 }
 
 export async function fetchClaudeAuthStatus(

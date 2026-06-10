@@ -386,7 +386,10 @@ function RootLayout() {
       <Toaster />
       {mounted && rootSurfaceState.showLogin ? (
         authStatus?.serveAIMode ? (
-          <ServeAIUnauthorizedScreen serveAILoginUrl={authStatus.serveAILoginUrl} />
+          <ServeAIUnauthorizedScreen
+            serveAILoginUrl={authStatus.serveAILoginUrl}
+            unauthorizedReason={authStatus.unauthorizedReason}
+          />
         ) : (
           <LoginScreen />
         )

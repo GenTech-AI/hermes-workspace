@@ -23,13 +23,14 @@ export const Route = createFileRoute('/api/auth-check')({
           const accessToken = getAccessTokenFromRequest(request)
           const loginUrl = getServeAILoginUrl()
 
-          // No instance context or no access token → not authenticated
+          // No instance context or no access token → not authenticated (needs login)
           if (!ctx.instanceId || !accessToken) {
             return json({
               authenticated: false,
               authRequired: true,
               serveAIMode: true,
               serveAILoginUrl: loginUrl,
+              unauthorizedReason: 'not_logged_in' as const,
             })
           }
 
@@ -37,12 +38,13 @@ export const Route = createFileRoute('/api/auth-check')({
           const result = await verifyServeAIInstanceAccess(ctx.instanceId, accessToken)
 
           if (result === false) {
-            // 4xx from gateway — token invalid or no access to this instance
+            // 4xx from gateway — token valid but no access to this specific instance
             return json({
               authenticated: false,
               authRequired: true,
               serveAIMode: true,
               serveAILoginUrl: loginUrl,
+              unauthorizedReason: 'access_denied' as const,
             })
           }
 

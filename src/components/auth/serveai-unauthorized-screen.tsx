@@ -3,41 +3,66 @@
  *
  * Shown in place of the password LoginScreen when the workspace is running
  * in ServeAI-managed mode and the request does not carry a valid ServeAI
- * session (user logged out, token expired, or URL pasted directly).
+ * session. Renders different content based on the reason:
  *
- * Mirrors the 401/403 HTML page returned by hermes-webui/api/routes.py
- * when serveai_instance_id is absent or the access token is missing/invalid.
+ * - 'not_logged_in'  : no token / no session (user needs to log in to ServeAI)
+ * - 'access_denied'  : valid token but user has no access to this instance
  */
 
 interface ServeAIUnauthorizedScreenProps {
   /** URL to redirect to for ServeAI login. Defaults to '/login'. */
   serveAILoginUrl?: string
+  /** Why the user is unauthorized. Defaults to 'not_logged_in'. */
+  unauthorizedReason?: 'not_logged_in' | 'access_denied'
 }
 
 export function ServeAIUnauthorizedScreen({
   serveAILoginUrl = '/login',
+  unauthorizedReason = 'not_logged_in',
 }: ServeAIUnauthorizedScreenProps) {
+  const isAccessDenied = unauthorizedReason === 'access_denied'
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-primary-50 px-4">
       <div className="w-full max-w-md">
         <div className="rounded-2xl bg-primary-100 px-8 py-10 text-center shadow-xl shadow-primary-900/5 ring-1 ring-primary-200">
-          {/* Lock icon */}
+          {/* Icon */}
           <div className="mb-6 flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-accent-500/10 ring-1 ring-accent-500/20">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-8 w-8 text-accent-500"
-                aria-hidden="true"
-              >
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-              </svg>
+              {isAccessDenied ? (
+                /* Shield-X icon for access denied */
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-8 w-8 text-accent-500"
+                  aria-hidden="true"
+                >
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                </svg>
+              ) : (
+                /* Lock icon for not logged in */
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-8 w-8 text-accent-500"
+                  aria-hidden="true"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              )}
             </div>
           </div>
 
@@ -70,21 +95,35 @@ export function ServeAIUnauthorizedScreen({
           </div>
 
           <h1 className="mb-2 text-xl font-semibold text-primary-900">
-            Not Authorized
+            {isAccessDenied ? 'Access Denied' : 'Not Authorized'}
           </h1>
 
-          <p className="mb-1 text-sm text-primary-600">
-            Hermes Workspace can only be accessed through the ServeAI platform.
-          </p>
-          <p className="mb-8 text-sm text-primary-500">
-            Please open Hermes from your ServeAI dashboard, or log in to ServeAI first.
-          </p>
+          {isAccessDenied ? (
+            <>
+              <p className="mb-1 text-sm text-primary-600">
+                You don&apos;t have access to this Hermes instance.
+              </p>
+              <p className="mb-8 text-sm text-primary-500">
+                Contact the instance owner to request access, or go back to your
+                ServeAI dashboard to open an instance you have access to.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="mb-1 text-sm text-primary-600">
+                Hermes Workspace can only be accessed through the ServeAI platform.
+              </p>
+              <p className="mb-8 text-sm text-primary-500">
+                Please open Hermes from your ServeAI dashboard, or log in to ServeAI first.
+              </p>
+            </>
+          )}
 
           <a
             href={serveAILoginUrl}
             className="inline-flex items-center gap-2 rounded-lg bg-accent-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-accent-600 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:ring-offset-2"
           >
-            Go to ServeAI Login
+            {isAccessDenied ? 'Go to Dashboard' : 'Go to ServeAI Login'}
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
