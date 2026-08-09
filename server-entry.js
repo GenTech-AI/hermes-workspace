@@ -7,6 +7,9 @@ import server from './dist/server/server.js'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const CLIENT_DIR = join(__dirname, 'dist', 'client')
 
+/** Matches HERMES_WORKSPACE_ASSET_BASE. See tryServeStatic. */
+const ASSET_BASE_PREFIX = '/hermes-assets'
+
 const port = parseInt(process.env.PORT || '3000', 10)
 // Default HOST to localhost-only. Operators who want the workspace reachable
 // on a LAN / Tailscale / public surface must opt in explicitly with
@@ -124,10 +127,18 @@ async function tryServeStatic(req, res) {
     req.url || '/',
     `http://${req.headers.host || 'localhost'}`,
   )
-  const pathname = decodeURIComponent(url.pathname)
+  let pathname = decodeURIComponent(url.pathname)
 
   // Prevent directory traversal
   if (pathname.includes('..')) return false
+
+  // A build made with HERMES_WORKSPACE_ASSET_BASE emits asset URLs under a prefix, but
+  // Vite still writes the files to dist/client/assets. Strip it back off so the same
+  // image serves correctly both standalone and behind a reverse proxy. No-op for a
+  // default build — nothing it emits starts with this.
+  if (pathname.startsWith(ASSET_BASE_PREFIX + '/')) {
+    pathname = pathname.slice(ASSET_BASE_PREFIX.length)
+  }
 
   // Asset requests should never fall through to the SSR handler. If a browser
   // asks for a stale hashed JS/CSS chunk after a deploy or branch switch,

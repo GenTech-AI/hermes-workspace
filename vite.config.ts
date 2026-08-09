@@ -89,6 +89,11 @@ async function isClaudeAgentHealthy(port = 8642): Promise<boolean> {
 const config = defineConfig(({ mode, command }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const claudeApiUrl = env.CLAUDE_API_URL?.trim() || 'http://127.0.0.1:8642'
+  // Prefix for emitted asset URLs. ServeAI hosts the workspace behind a proxy where
+  // "/assets" would collide with its own bundle, so it builds with
+  // HERMES_WORKSPACE_ASSET_BASE=/hermes-assets/ and needs one proxy rule instead of three.
+  // Defaults to '/' — standalone and Electron builds are unaffected.
+  const assetBase = env.HERMES_WORKSPACE_ASSET_BASE?.trim() || '/'
   // /api/connection-status is handled by the real route file at
   // src/routes/api/connection-status.ts; the dev server no longer
   // intercepts that path with a slim shortcut. See #285.
@@ -423,6 +428,7 @@ const config = defineConfig(({ mode, command }) => {
   }
 
   return {
+    base: assetBase,
     test: {
       exclude: [
         '**/node_modules/**',
