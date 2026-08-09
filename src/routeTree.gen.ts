@@ -119,6 +119,7 @@ import { Route as ApiSkillsToggleRouteImport } from './routes/api/skills/toggle'
 import { Route as ApiSkillsInstallRouteImport } from './routes/api/skills/install'
 import { Route as ApiSkillsHubSearchRouteImport } from './routes/api/skills/hub-search'
 import { Route as ApiSessionsSendRouteImport } from './routes/api/sessions/send'
+import { Route as ApiServeaiMcpStatusRouteImport } from './routes/api/serveai/mcp-status'
 import { Route as ApiServeaiContextInitRouteImport } from './routes/api/serveai/context-init'
 import { Route as ApiProfilesUpdateRouteImport } from './routes/api/profiles/update'
 import { Route as ApiProfilesRenameRouteImport } from './routes/api/profiles/rename'
@@ -711,6 +712,11 @@ const ApiSessionsSendRoute = ApiSessionsSendRouteImport.update({
   path: '/send',
   getParentRoute: () => ApiSessionsRoute,
 } as any)
+const ApiServeaiMcpStatusRoute = ApiServeaiMcpStatusRouteImport.update({
+  id: '/api/serveai/mcp-status',
+  path: '/api/serveai/mcp-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiServeaiContextInitRoute = ApiServeaiContextInitRouteImport.update({
   id: '/api/serveai/context-init',
   path: '/api/serveai/context-init',
@@ -1052,6 +1058,7 @@ export interface FileRoutesByFullPath {
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
   '/api/serveai/context-init': typeof ApiServeaiContextInitRoute
+  '/api/serveai/mcp-status': typeof ApiServeaiMcpStatusRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1203,6 +1210,7 @@ export interface FileRoutesByTo {
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
   '/api/serveai/context-init': typeof ApiServeaiContextInitRoute
+  '/api/serveai/mcp-status': typeof ApiServeaiMcpStatusRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1356,6 +1364,7 @@ export interface FileRoutesById {
   '/api/profiles/rename': typeof ApiProfilesRenameRoute
   '/api/profiles/update': typeof ApiProfilesUpdateRoute
   '/api/serveai/context-init': typeof ApiServeaiContextInitRoute
+  '/api/serveai/mcp-status': typeof ApiServeaiMcpStatusRoute
   '/api/sessions/send': typeof ApiSessionsSendRoute
   '/api/skills/hub-search': typeof ApiSkillsHubSearchRoute
   '/api/skills/install': typeof ApiSkillsInstallRoute
@@ -1510,6 +1519,7 @@ export interface FileRouteTypes {
     | '/api/profiles/rename'
     | '/api/profiles/update'
     | '/api/serveai/context-init'
+    | '/api/serveai/mcp-status'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1661,6 +1671,7 @@ export interface FileRouteTypes {
     | '/api/profiles/rename'
     | '/api/profiles/update'
     | '/api/serveai/context-init'
+    | '/api/serveai/mcp-status'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1813,6 +1824,7 @@ export interface FileRouteTypes {
     | '/api/profiles/rename'
     | '/api/profiles/update'
     | '/api/serveai/context-init'
+    | '/api/serveai/mcp-status'
     | '/api/sessions/send'
     | '/api/skills/hub-search'
     | '/api/skills/install'
@@ -1948,6 +1960,7 @@ export interface RootRouteChildren {
   ApiProfilesRenameRoute: typeof ApiProfilesRenameRoute
   ApiProfilesUpdateRoute: typeof ApiProfilesUpdateRoute
   ApiServeaiContextInitRoute: typeof ApiServeaiContextInitRoute
+  ApiServeaiMcpStatusRoute: typeof ApiServeaiMcpStatusRoute
   ApiUpdateAgentRoute: typeof ApiUpdateAgentRoute
   ApiUpdateStatusRoute: typeof ApiUpdateStatusRoute
   ApiUpdateWorkspaceRoute: typeof ApiUpdateWorkspaceRoute
@@ -2725,6 +2738,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSessionsSendRouteImport
       parentRoute: typeof ApiSessionsRoute
     }
+    '/api/serveai/mcp-status': {
+      id: '/api/serveai/mcp-status'
+      path: '/api/serveai/mcp-status'
+      fullPath: '/api/serveai/mcp-status'
+      preLoaderRoute: typeof ApiServeaiMcpStatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/serveai/context-init': {
       id: '/api/serveai/context-init'
       path: '/api/serveai/context-init'
@@ -3336,6 +3356,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiProfilesRenameRoute: ApiProfilesRenameRoute,
   ApiProfilesUpdateRoute: ApiProfilesUpdateRoute,
   ApiServeaiContextInitRoute: ApiServeaiContextInitRoute,
+  ApiServeaiMcpStatusRoute: ApiServeaiMcpStatusRoute,
   ApiUpdateAgentRoute: ApiUpdateAgentRoute,
   ApiUpdateStatusRoute: ApiUpdateStatusRoute,
   ApiUpdateWorkspaceRoute: ApiUpdateWorkspaceRoute,

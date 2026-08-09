@@ -12,8 +12,13 @@ function clearBasepathGlobal() {
     .__HERMES_WORKSPACE_BASEPATH__
 }
 
+function setPathname(pathname: string) {
+  window.history.replaceState({}, '', pathname)
+}
+
 afterEach(() => {
   clearBasepathGlobal()
+  setPathname('/')
 })
 
 describe('resolveRouterBasepath', () => {
@@ -44,6 +49,36 @@ describe('resolveRouterBasepath', () => {
 
   it('collapses multiple trailing slashes', () => {
     setBasepathGlobal('/workspaces/abc////')
+    expect(resolveRouterBasepath()).toBe('/workspaces/abc')
+  })
+})
+
+describe('resolveRouterBasepath — ServeAI mount prefix', () => {
+  const instanceId = '6a788680b264e831aa5082aa'
+
+  it('derives the basepath from the entry URL', () => {
+    setPathname(`/hermes-workspace/${instanceId}/`)
+    expect(resolveRouterBasepath()).toBe(`/hermes-workspace/${instanceId}`)
+  })
+
+  it('keeps the basepath after navigating deeper', () => {
+    setPathname(`/hermes-workspace/${instanceId}/dashboard`)
+    expect(resolveRouterBasepath()).toBe(`/hermes-workspace/${instanceId}`)
+  })
+
+  it('ignores a prefix whose second segment is not an instance ID', () => {
+    setPathname('/hermes-workspace/dashboard')
+    expect(resolveRouterBasepath()).toBe('/')
+  })
+
+  it('ignores unrelated paths so standalone hosting is unaffected', () => {
+    setPathname('/dashboard')
+    expect(resolveRouterBasepath()).toBe('/')
+  })
+
+  it('lets an explicit global override the URL', () => {
+    setPathname(`/hermes-workspace/${instanceId}/`)
+    setBasepathGlobal('/workspaces/abc')
     expect(resolveRouterBasepath()).toBe('/workspaces/abc')
   })
 })

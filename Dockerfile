@@ -23,7 +23,12 @@ COPY package.json pnpm-lock.yaml* ./
 RUN pnpm install --frozen-lockfile --ignore-scripts && \
     pnpm rebuild esbuild unrs-resolver
 
-# Copy sources and build
+# Copy sources and build.
+# HERMES_WORKSPACE_ASSET_BASE prefixes every emitted asset URL. ServeAI builds with
+# /hermes-assets/ so its reverse proxy needs one rule and nothing collides with its own
+# bundle at /assets. Empty by default — standalone images are unaffected.
+ARG HERMES_WORKSPACE_ASSET_BASE=
+ENV HERMES_WORKSPACE_ASSET_BASE=$HERMES_WORKSPACE_ASSET_BASE
 COPY . .
 RUN pnpm build
 

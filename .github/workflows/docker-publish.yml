@@ -104,6 +104,11 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          # Assets are emitted under a prefix so ServeAI's reverse proxy needs a single
+          # rule and nothing collides with its own bundle at /assets. server-entry.js
+          # strips it back off, so standalone `docker run` still works.
+          build-args: |
+            HERMES_WORKSPACE_ASSET_BASE=/hermes-assets/
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
